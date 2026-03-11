@@ -1,12 +1,15 @@
 #include "SqliteDatabase.h"
 
 #include <atomic>
+#include <cstdio>
+#include <filesystem>
 #include <sstream>
 
 #include "BindableValue.h"
 #include "BtrieveException.h"
 #include "SqlitePreparedStatement.h"
 #include "SqliteQuery.h"
+#include "SqliteToBtrieveExporter.h"
 #include "SqliteTransaction.h"
 #include "SqliteUtil.h"
 #include "sqlite/sqlite3.h"
@@ -108,6 +111,10 @@ BtrieveError SqliteDatabase::open(const wchar_t *filename, OpenMode openMode) {
   sqlite3 *db;
   unsigned int openFlags =
       SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | this->openFlags;
+
+  openedDbPath = filename == nullptr ? L"" : filename;
+  openedReadOnly = (openMode == OpenMode::ReadOnly);
+  dirty = false;
 
   int errorCode =
       sqlite3_open_v2(toStdString(filename).c_str(), &db, openFlags, nullptr);
@@ -459,13 +466,51 @@ void SqliteDatabase::createSqliteTriggers(const BtrieveDatabase &database) {
   cmd.execute();
 }
 
+void SqliteDatabase::exportDatMirrorOnClose() {
+  if (!dirty || openedReadOnly || openedDbPath.empty()) {
+    return;
+  }
+
+  std::filesystem::path dbPath(openedDbPath);
+  auto datPath = dbPath;
+  datPath.replace_extension(L".dat");
+
+  if (!std::filesystem::exists(datPath)) {
+    auto upperDatPath = dbPath;
+    upperDatPath.replace_extension(L".DAT");
+    if (std::filesystem::exists(upperDatPath)) {
+      datPath = upperDatPath;
+    }
+  }
+
+  std::string exportError;
+  BtrieveError exportResult =
+      exportSqliteToBtrieveDat(dbPath.c_str(), datPath.c_str(), &exportError);
+  if (exportResult != BtrieveError::Success) {
+    throw BtrieveException(exportResult,
+                           "Failed SQLite->DAT mirror export (%s): %s",
+                           toStdString(datPath.c_str()).c_str(),
+                           exportError.c_str());
+  }
+}
+
 // Closes an opened database.
 void SqliteDatabase::close() {
+  try {
+    exportDatMirrorOnClose();
+  } catch (const BtrieveException& ex) {
+    fprintf(stderr, "SQLite->DAT mirror export failed: %s\n",
+            ex.getErrorMessage().c_str());
+  }
+
   preparedStatements.clear();
   database.reset();
 
   keys.clear();
   cache.clear();
+  openedDbPath.clear();
+  openedReadOnly = false;
+  dirty = false;
 }
 
 SqlitePreparedStatement &SqliteDatabase::getPreparedStatement(
@@ -579,6 +624,7 @@ BtrieveError SqliteDatabase::deleteAll() {
   if (ret) {
     cache.clear();
     setPosition(0);
+    dirty = true;
   }
 
   return ret ? BtrieveError::Success : BtrieveError::IOError;
@@ -596,9 +642,12 @@ BtrieveError SqliteDatabase::deleteRecord() {
     return ex.getError();
   }
 
-  return sqlite3_changes(database.get()) == 1
-             ? BtrieveError::Success
-             : BtrieveError::InvalidPositioning;
+  if (sqlite3_changes(database.get()) == 1) {
+    dirty = true;
+    return BtrieveError::Success;
+  }
+
+  return BtrieveError::InvalidPositioning;
 }
 
 class SqliteErrorConverter {
@@ -700,6 +749,7 @@ std::pair<BtrieveError, unsigned int> SqliteDatabase::insertRecord(
   }
 
   cache.cache(lastInsertRowId, Record(lastInsertRowId, data));
+  dirty = true;
   return std::make_pair(error, lastInsertRowId);
 }
 
@@ -842,6 +892,7 @@ BtrieveError SqliteDatabase::updateRecord(
   }
 
   cache.cache(id, Record(id, data));
+  dirty = true;
   return BtrieveError::Success;
 }
 

@@ -4,10 +4,15 @@ TESTBASE_SRCS = ["TestBase.cc"]
 
 TEST_SRCS = glob(["*_test.cc"])
 
-SQLITE_DATABASE_SRCS = ["SqliteDatabase.cc", "SqliteUtil.cc"]
+SQLITE_DATABASE_SRCS = [
+  "SqliteDatabase.cc",
+  "SqliteToBtrieveExporter.cc",
+  "SqliteUtil.cc",
+]
 
 SQLITE_DATABASE_HDRS = [
   "SqliteDatabase.h",
+  "SqliteToBtrieveExporter.h",
   "SqlitePreparedStatement.h",
   "SqliteQuery.h",
   "SqliteReader.h",

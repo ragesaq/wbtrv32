@@ -37,6 +37,7 @@
     <ClInclude Include="..\..\btrieve\SqlDatabase.h" />
     <ClInclude Include="..\..\btrieve\SqliteDatabase.h" />
     <ClInclude Include="..\..\btrieve\SqlitePreparedStatement.h" />
+    <ClInclude Include="..\..\btrieve\SqliteToBtrieveExporter.h" />
     <ClInclude Include="..\..\btrieve\SqliteQuery.h" />
     <ClInclude Include="..\..\btrieve\SqliteReader.h" />
     <ClInclude Include="..\..\btrieve\SqliteTransaction.h" />
@@ -50,6 +51,7 @@
     <ClCompile Include="..\..\btrieve\Key.cc" />
     <ClCompile Include="..\..\btrieve\OperationCode.cc" />
     <ClCompile Include="..\..\btrieve\SqliteDatabase.cc" />
+    <ClCompile Include="..\..\btrieve\SqliteToBtrieveExporter.cc" />
     <ClCompile Include="..\..\btrieve\SqliteUtil.cc" />
     <ClCompile Include="..\..\btrieve\Text.cc" />
   </ItemGroup>

@@ -2,6 +2,7 @@
 #define __SQLITE_DATABASE_H_
 
 #include <memory>
+#include <string>
 
 #include "OperationCode.h"
 #include "Record.h"
@@ -59,6 +60,7 @@ class SqliteDatabase : public SqlDatabase {
 
  private:
   SqlitePreparedStatement &getPreparedStatement(const char *sql) const;
+  void exportDatMirrorOnClose();
 
   Record readRecord(unsigned int position, const SqliteReader &reader,
                     unsigned int columnOrdinal) {
@@ -113,6 +115,9 @@ class SqliteDatabase : public SqlDatabase {
   mutable std::unordered_map<std::string, SqlitePreparedStatement>
       preparedStatements;
   std::shared_ptr<sqlite3> database;
+  std::wstring openedDbPath;
+  bool openedReadOnly = false;
+  bool dirty = false;
 
   friend class SqliteQuery;
 };

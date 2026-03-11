@@ -9,6 +9,7 @@
 #include "btrieve/ErrorCode.h"
 #include "btrieve/OperationCode.h"
 #include "btrieve/SqliteDatabase.h"
+#include "btrieve/SqliteToBtrieveExporter.h"
 #include "btrieve/Text.h"
 #include "framework.h"
 
@@ -716,4 +717,39 @@ extern "C" int __stdcall BTRCALL(WORD wOperation, LPVOID lpPositionBlock,
   }
 
   return error;
+}
+
+extern "C" int __stdcall WBTRV32_EXPORT_DB_TO_DAT(const char* dbPathUtf8) {
+  if (dbPathUtf8 == nullptr || dbPathUtf8[0] == '\0') {
+    return BtrieveError::InvalidFileName;
+  }
+
+  std::filesystem::path dbPath = toWideString(dbPathUtf8);
+  std::filesystem::path datPath = dbPath;
+  datPath.replace_extension(L".dat");
+
+  if (!std::filesystem::exists(datPath)) {
+    auto upperDatPath = dbPath;
+    upperDatPath.replace_extension(L".DAT");
+    if (std::filesystem::exists(upperDatPath)) {
+      datPath = upperDatPath;
+    }
+  }
+
+  std::string errorMessage;
+  const BtrieveError err =
+      exportSqliteToBtrieveDat(dbPath.c_str(), datPath.c_str(), &errorMessage);
+  return err;
+}
+
+extern "C" int __stdcall WBTRV32_EXPORT_ALL_DB_TO_DAT(
+    const char* directoryPathUtf8, unsigned int* exportedCount) {
+  if (directoryPathUtf8 == nullptr || directoryPathUtf8[0] == '\0') {
+    return BtrieveError::InvalidFileName;
+  }
+
+  std::string errorMessage;
+  const BtrieveError err = exportAllSqliteToBtrieveDatInDirectory(
+      toWideString(directoryPathUtf8).c_str(), exportedCount, &errorMessage);
+  return err;
 }
