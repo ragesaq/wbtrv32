@@ -370,18 +370,18 @@ static BtrieveError exportInternal(const std::filesystem::path& sqlitePath,
 
   if (sqliteData.variableLengthRecords) {
     throw BtrieveException(
-        BtrieveError::NotSupported,
+        BtrieveError::IOError,
         "SQLite->DAT exporter currently supports fixed-length records only");
   }
 
   if (physicalRecordLength <= 2) {
-    throw BtrieveException(BtrieveError::NotSupported,
+    throw BtrieveException(BtrieveError::IOError,
                            "Invalid physical record length");
   }
 
   const uint32_t recordsPerPage = (pageLength - 6u) / physicalRecordLength;
   if (recordsPerPage == 0) {
-    throw BtrieveException(BtrieveError::NotSupported,
+    throw BtrieveException(BtrieveError::IOError,
                            "Record size too large for page");
   }
 
@@ -456,7 +456,7 @@ static BtrieveError exportInternal(const std::filesystem::path& sqlitePath,
 
   const uint32_t pagesPerPat = (pageLength / 4u) - 2u;
   if (logicalPageCount > pagesPerPat) {
-    throw BtrieveException(BtrieveError::NotSupported,
+    throw BtrieveException(BtrieveError::IOError,
                            "Logical page count exceeds single PAT capacity");
   }
 
