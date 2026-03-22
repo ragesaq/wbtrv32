@@ -2,7 +2,9 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 TESTBASE_SRCS = ["TestBase.cc"]
 
-TEST_SRCS = glob(["*_test.cc"])
+TEST_SRCS = glob(["*_test.cc"], exclude = ["WbtrieveConfig_test.cc"]) + [
+  "WbtrieveConfig_test.cc",
+]
 
 SQLITE_DATABASE_SRCS = [
   "SqliteDatabase.cc",
@@ -20,11 +22,18 @@ SQLITE_DATABASE_HDRS = [
   "SqliteUtil.h",
 ]
 
+BTRIEVE_SRCS = glob(
+  ["*.cc"],
+  exclude = TEST_SRCS + TESTBASE_SRCS + SQLITE_DATABASE_SRCS + ["WbtrieveConfig.cc"],
+) + [
+  "WbtrieveConfig.cc",
+]
+
 cc_library(
   name = "btrieve",
   hdrs = glob(["*.h"], exclude = SQLITE_DATABASE_HDRS + TESTBASE_SRCS),
   visibility = ["//visibility:public"],
-  srcs = glob(["*.cc"], exclude = TEST_SRCS + TESTBASE_SRCS + SQLITE_DATABASE_SRCS),
+  srcs = BTRIEVE_SRCS,
 )
 
 cc_library(

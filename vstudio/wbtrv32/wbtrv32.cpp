@@ -9,8 +9,8 @@
 #include "btrieve/ErrorCode.h"
 #include "btrieve/OperationCode.h"
 #include "btrieve/SqliteDatabase.h"
-#include "btrieve/SqliteToBtrieveExporter.h"
 #include "btrieve/Text.h"
+#include "btrieve/WbtrieveConfig.h"
 #include "framework.h"
 
 // Define this to pop up a messagebox when wbtrv32.dll is loaded, to allow you
@@ -52,6 +52,25 @@ void wbtrv32::processAttach() {
   _logFile.reset(fopen("/tmp/wbtrv32.log", "ab"));
 #endif  // WIN32
 #endif  // LOG_TO_FILE
+
+#ifdef WIN32
+  wchar_t dllPathBuf[MAX_PATH] = {};
+  HMODULE hm = nullptr;
+  GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                     (LPCWSTR)&wbtrv32::processAttach, &hm);
+  std::filesystem::path dllDir;
+  if (hm != nullptr) {
+    GetModuleFileNameW(hm, dllPathBuf, MAX_PATH);
+    dllDir = std::filesystem::path(dllPathBuf).parent_path();
+  } else {
+    dllDir = std::filesystem::current_path();
+  }
+#else
+  std::filesystem::path dllDir = std::filesystem::current_path();
+#endif
+  btrieve::g_wbtrieveConfig =
+      btrieve::WbtrieveConfig::load(dllDir / L"wbtrv32.ini");
 }
 
 void wbtrv32::processDetach() {

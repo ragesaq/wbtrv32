@@ -43,6 +43,7 @@
     <ClInclude Include="..\..\btrieve\SqliteTransaction.h" />
     <ClInclude Include="..\..\btrieve\SqliteUtil.h" />
     <ClInclude Include="..\..\btrieve\Text.h" />
+    <ClInclude Include="..\..\btrieve\WbtrieveConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\btrieve\BtrieveDatabase.cc" />
@@ -54,6 +55,7 @@
     <ClCompile Include="..\..\btrieve\SqliteToBtrieveExporter.cc" />
     <ClCompile Include="..\..\btrieve\SqliteUtil.cc" />
     <ClCompile Include="..\..\btrieve\Text.cc" />
+    <ClCompile Include="..\..\btrieve\WbtrieveConfig.cc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

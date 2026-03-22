@@ -12,6 +12,7 @@
 #include "SqliteToBtrieveExporter.h"
 #include "SqliteTransaction.h"
 #include "SqliteUtil.h"
+#include "WbtrieveConfig.h"
 #include "sqlite/sqlite3.h"
 
 #ifndef WIN32
@@ -496,11 +497,13 @@ void SqliteDatabase::exportDatMirrorOnClose() {
 
 // Closes an opened database.
 void SqliteDatabase::close() {
-  try {
-    exportDatMirrorOnClose();
-  } catch (const BtrieveException& ex) {
-    fprintf(stderr, "SQLite->DAT mirror export failed: %s\n",
-            ex.getErrorMessage().c_str());
+  if (g_wbtrieveConfig.shouldMirrorOnClose()) {
+    try {
+      exportDatMirrorOnClose();
+    } catch (const BtrieveException& ex) {
+      fprintf(stderr, "SQLite->DAT mirror export failed: %s\n",
+              ex.getErrorMessage().c_str());
+    }
   }
 
   preparedStatements.clear();
