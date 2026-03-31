@@ -29,9 +29,14 @@ class WbtrieveConfig {
                               const std::filesystem::path& datPath) const;
 
  private:
-  WbtrieveConfig() = default;
   StorageMode storageMode = StorageMode::Sqlite;
   bool mirrorSyncOnClose = true;
+
+  explicit WbtrieveConfig(StorageMode mode, bool syncOnClose)
+      : storageMode(mode), mirrorSyncOnClose(syncOnClose) {}
+
+ public:
+  WbtrieveConfig() = default;
 };
 
 extern WbtrieveConfig g_wbtrieveConfig;
